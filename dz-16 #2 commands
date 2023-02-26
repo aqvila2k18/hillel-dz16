@@ -1,0 +1,7 @@
+########## Виконайте команду, яка поверне Cidr Block всіх сабнетів з іменем (тег) private у вашій VPC ##########
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-0924120d62cb44ba2" "Name=tag:Name,Values=private*" --query 'Subnets[*].CidrBlock'
+
+[
+    "10.0.1.0/24"
+]
