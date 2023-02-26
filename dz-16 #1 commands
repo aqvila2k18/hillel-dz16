@@ -1,0 +1,157 @@
+########## Створіть VPC ##########
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specification 'ResourceType=vpc,Tags=[{Key=Name,Value=VPC-DZ16}]'
+{
+    "Vpc": {
+        "CidrBlock": "10.0.0.0/16",
+        "DhcpOptionsId": "dopt-03df4b534897bc7df",
+        "State": "pending",
+        "VpcId": "vpc-0924120d62cb44ba2",
+        "OwnerId": "534931358663",
+        "InstanceTenancy": "default",
+        "Ipv6CidrBlockAssociationSet": [],
+        "CidrBlockAssociationSet": [
+            {
+                "AssociationId": "vpc-cidr-assoc-0c9fc2f51cc40b1f2",
+                "CidrBlock": "10.0.0.0/16",
+                "CidrBlockState": {
+                    "State": "associated"
+                }
+            }
+        ],
+        "IsDefault": false,
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "VPC-DZ16"
+            }
+        ]
+    }
+}
+
+########## Додайте 2 subnets з тегами Name=public & Name=private ##########
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 create-subnet --vpc-id vpc-0924120d62cb44ba2 --cidr-block 10.0.0.0/24 --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=public-dz16}]'
+{
+    "Subnet": {
+        "AvailabilityZone": "us-east-1f",
+        "AvailabilityZoneId": "use1-az5",
+        "AvailableIpAddressCount": 251,
+        "CidrBlock": "10.0.0.0/24",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false,
+        "State": "available",
+        "SubnetId": "subnet-075771bb6c30c1956",
+        "VpcId": "vpc-0924120d62cb44ba2",
+        "OwnerId": "534931358663",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "public-dz16"
+            }
+        ],
+        "SubnetArn": "arn:aws:ec2:us-east-1:534931358663:subnet/subnet-075771bb6c30c1956",
+        "EnableDns64": false,
+        "Ipv6Native": false,
+        "PrivateDnsNameOptionsOnLaunch": {
+            "HostnameType": "ip-name",
+            "EnableResourceNameDnsARecord": false,
+            "EnableResourceNameDnsAAAARecord": false
+        }
+    }
+}
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 create-subnet --vpc-id vpc-0924120d62cb44ba2 --cidr-block 10.0.1.0/24 --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=private-dz16}]'
+{
+    "Subnet": {
+        "AvailabilityZone": "us-east-1f",
+        "AvailabilityZoneId": "use1-az5",
+        "AvailableIpAddressCount": 251,
+        "CidrBlock": "10.0.1.0/24",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false,
+        "State": "available",
+        "SubnetId": "subnet-083dc4558614ab49a",
+        "VpcId": "vpc-0924120d62cb44ba2",
+        "OwnerId": "534931358663",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "private-dz16"
+            }
+        ],
+        "SubnetArn": "arn:aws:ec2:us-east-1:534931358663:subnet/subnet-083dc4558614ab49a",
+        "EnableDns64": false,
+        "Ipv6Native": false,
+        "PrivateDnsNameOptionsOnLaunch": {
+            "HostnameType": "ip-name",
+            "EnableResourceNameDnsARecord": false,
+            "EnableResourceNameDnsAAAARecord": false
+        }
+    }
+}
+
+##########  Створіть IGW та приєднати до VPC ##########
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 create-internet-gateway --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=igw-dz16}]'
+{
+    "InternetGateway": {
+        "Attachments": [],
+        "InternetGatewayId": "igw-045e60ddc8b5567e7",
+        "OwnerId": "534931358663",
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "igw-dz16"
+            }
+        ]
+    }
+}
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 attach-internet-gateway --internet-gateway-id igw-045e60ddc8b5567e7 --vpc-id vpc-0924120d62cb44ba2
+
+########## Створіть додаткову route table з іменем public ##########
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 create-route-table --vpc-id vpc-0924120d62cb44ba2 --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=public}]'
+{
+    "RouteTable": {
+        "Associations": [],
+        "PropagatingVgws": [],
+        "RouteTableId": "rtb-01c38fd11ac90a48c",
+        "Routes": [
+            {
+                "DestinationCidrBlock": "10.0.0.0/16",
+                "GatewayId": "local",
+                "Origin": "CreateRouteTable",
+                "State": "active"
+            }
+        ],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "public"
+            }
+        ],
+        "VpcId": "vpc-0924120d62cb44ba2",
+        "OwnerId": "534931358663"
+    }
+}
+
+########## В цій route table додайте маршрут на IGW та додайте до неї public subnet ##########
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 create-route --route-table-id rtb-01c38fd11ac90a48c --destination-cidr-block 0.0.0.0/0 --gateway-id igw-045e60ddc8b5567e7
+{
+    "Return": true
+}
+
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 associate-route-table --route-table-id rtb-01c38fd11ac90a48c --subnet-id subnet-075771bb6c30c1956
+{
+    "AssociationId": "rtbassoc-0d148fffda21c549b",
+    "AssociationState": {
+        "State": "associated"
+    }
+}
