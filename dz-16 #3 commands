@@ -1,0 +1,3 @@
+aqvila@serhii-vdovenko-2 dz16 % aws ec2 describe-images --owners amazon --filters "Name=description,Values=Amazon Linux 2 Kernel 5.10 AMI*"  "Name=architecture,Values=x86_64" --query 'reverse(sort_by(Images, &CreationDate))[0].ImageId' --region us-west-2
+
+"ami-0f1a5f5ada0e7da53"
